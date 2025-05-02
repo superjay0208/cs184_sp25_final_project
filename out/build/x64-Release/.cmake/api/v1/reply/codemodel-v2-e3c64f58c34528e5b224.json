@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/Danna C/Downloads/toon/out/build/x64-Release",
-		"source" : "C:/Users/Danna C/Downloads/toon"
+		"build" : "C:/Users/Danna C/source/repos/cs184_sp25_final_project/out/build/x64-Release",
+		"source" : "C:/Users/Danna C/source/repos/cs184_sp25_final_project"
 	},
 	"version" : 
 	{

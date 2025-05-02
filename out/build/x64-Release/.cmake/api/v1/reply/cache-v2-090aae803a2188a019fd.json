@@ -39,7 +39,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/Danna C/Downloads/toon/out/build/x64-Release"
+			"value" : "c:/Users/Danna C/source/repos/cs184_sp25_final_project/out/build/x64-Release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -367,7 +367,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/Danna C/Downloads/toon/out/build/x64-Release/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/Danna C/source/repos/cs184_sp25_final_project/out/build/x64-Release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -463,7 +463,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/Danna C/Downloads/toon"
+			"value" : "C:/Users/Danna C/source/repos/cs184_sp25_final_project"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -475,7 +475,7 @@
 				}
 			],
 			"type" : "PATH",
-			"value" : "C:/Users/Danna C/Downloads/toon/out/install/x64-Release"
+			"value" : "C:/Users/Danna C/Source/Repos/cs184_sp25_final_project/out/install/x64-Release"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -1127,7 +1127,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/Danna C/Downloads/toon/out/build/x64-Release"
+			"value" : "C:/Users/Danna C/source/repos/cs184_sp25_final_project/out/build/x64-Release"
 		},
 		{
 			"name" : "ToonShadingExample_IS_TOP_LEVEL",
@@ -1151,7 +1151,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/Danna C/Downloads/toon"
+			"value" : "C:/Users/Danna C/source/repos/cs184_sp25_final_project"
 		},
 		{
 			"name" : "VCPKG_APPLOCAL_DEPS",

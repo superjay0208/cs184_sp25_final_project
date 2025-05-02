@@ -66,7 +66,7 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData); // OBJ Loade
 int main(int argc, char* argv[]) {
 
     // --- Get OBJ File Path ---
-    std::string objFilePath = "monkey.obj"; // Default path
+    std::string objFilePath = "teapot.obj"; // Default path
     if (argc > 1) {
         objFilePath = argv[1]; // Use path from command line if provided
     }

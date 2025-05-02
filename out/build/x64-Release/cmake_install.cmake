@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/Danna C/Downloads/toon
+# Install script for directory: C:/Users/Danna C/source/repos/cs184_sp25_final_project
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Users/Danna C/Downloads/toon/out/install/x64-Release")
+  set(CMAKE_INSTALL_PREFIX "C:/Users/Danna C/Source/Repos/cs184_sp25_final_project/out/install/x64-Release")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -47,6 +47,6 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-  file(WRITE "C:/Users/Danna C/Downloads/toon/out/build/x64-Release/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "C:/Users/Danna C/source/repos/cs184_sp25_final_project/out/build/x64-Release/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
