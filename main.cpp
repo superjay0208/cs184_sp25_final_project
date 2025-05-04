@@ -199,8 +199,8 @@ int main(int argc, char* argv[]) {
         toonShader.setMat3("normalMatrix", normalMatrix);
 
         // Set lighting and object uniforms
-        toonShader.setVec3("lightDir", glm::vec3(0.1f, 1.4f, 1.0f));
-        toonShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.95f));
+        toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.8f, 0.8f, 0.8f)));
+        toonShader.setVec3("lightColor", glm::vec3(2.0f, 2.0f, 2.0f));
         toonShader.setVec3("objectColor", glm::vec3(0.6f, 0.6f, 0.6f)); // Grey object color
         toonShader.setVec3("viewPos", cameraPos);
 
@@ -241,7 +241,6 @@ int main(int argc, char* argv[]) {
     glfwTerminate();
     return 0;
 }
-
 
 // --- OBJ Loader using tinyobjloader ---
 bool loadObjModel(const std::string& filepath, MeshData& meshData) {
