@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map> // Needed for vertex de-duplication
 #include <stdexcept>     // Needed for exceptions
+#include <cmath>
 
 // Define this in exactly one .cpp file before including the header
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -22,6 +23,8 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // Camera settings (Static)
+float x_pos = 0.0;
+float z_pos = 0.0;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 50.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -179,7 +182,7 @@ int main(int argc, char* argv[]) {
 
         // Set up view and projection matrices
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        glm::mat4 view = glm::lookAt(cameraPos, cameraFront, cameraUp);
         toonShader.setMat4("projection", projection);
         toonShader.setMat4("view", view);
 
@@ -188,7 +191,7 @@ int main(int argc, char* argv[]) {
         model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(modelYaw), glm::vec3(0.0f, 1.0f, 0.0f));
         // Optional: Scale model if it's too big/small
-        // model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
         toonShader.setMat4("model", model);
 
         // Calculate and set the normal matrix
@@ -212,6 +215,22 @@ int main(int argc, char* argv[]) {
         // --- Swap Buffers and Poll Events ---
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        // --- JR's Camera System ---
+        
+        if (x_pos < 2 * 3.14159265) {
+            x_pos += 0.0005f;
+        }
+        else {
+            x_pos = 0;
+        }
+        if (z_pos < 2 * 3.14159265) {
+            z_pos += 0.0005f;
+        }
+        else {
+            z_pos = 0;
+        }
+        cameraPos = glm::vec3(20 * std::sin(x_pos), 0.5f, -20 * std::cos(z_pos));
     }
 
     // --- Cleanup ---
