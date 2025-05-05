@@ -21,8 +21,8 @@ void main() {
 		diff = pow(diff, 0.5);
 
 
-		int tone = int(floor(diff * 14.0));
-		tone = clamp(tone, 0, 3);
+		int tone = int(floor(diff * 64.0));
+		tone = clamp(tone, 1, 3);
 
 
 		float v = (float(tone) + 0.5) / 4.0;

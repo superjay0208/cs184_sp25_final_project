@@ -7,26 +7,28 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <unordered_map> 
-#include <stdexcept>    
+#include <unordered_map>
+#include <stdexcept>
 #include <cmath>
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h" 
+#include "tiny_obj_loader.h"
 
-#include "shader.h"     
-#include "png.h"      
-#include "hw4_helpers/shaderUtils.h" 
+#include "shader.h"
+#include "png.h"
+#include "hw4_helpers/shaderUtils.h"
 
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-float x_pos = 0.0;
-float z_pos = 3.14159265f;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 50.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+float orbit_radius = 40.0f;
+float orbit_speed = 0.005f;
+float orbit_angle_x = 0.0f;
+float orbit_angle_z = 0.0f;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, orbit_radius);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
 float fov = 45.0f;
 
 float modelYaw = 0.0f;
@@ -44,7 +46,7 @@ bool mouseButtonPressed = false;
 struct Vertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;
-	glm::vec2 TexCoords; 
+	glm::vec2 TexCoords;
 };
 
 struct MeshData {
@@ -57,13 +59,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-bool loadObjModel(const std::string& filepath, MeshData& meshData); 
+bool loadObjModel(const std::string& filepath, MeshData& meshData);
 
 
 int main(int argc, char* argv[]) {
 	
-	std::string objFilePath = "teapot.obj"; 
-	std::string textureFilePath = "default_texture.png"; 
+	std::string objFilePath = "teapot.obj";
+	std::string textureFilePath = "default_texture.png";
 	
 	if (argc == 2) {
 		objFilePath = argv[1];
@@ -71,7 +73,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "No texture path provided, using default: " << textureFilePath << std::endl;
 	} else if (argc >= 3) {
 		objFilePath = argv[1];
-		textureFilePath = argv[2]; 
+		textureFilePath = argv[2];
 	} else {
 		std::cout << "Usage: " << argv[0] << " [path/to/model.obj] [path/to/texture.png]" << std::endl;
 		std::cout << "No paths provided, using defaults: " << objFilePath << " and " << textureFilePath << std::endl;
@@ -112,17 +114,17 @@ int main(int argc, char* argv[]) {
 	glEnable(GL_DEPTH_TEST);
 	
 
-	Shader toonShader("shaders/crosshatch.vert", "shaders/crosshatch.frag");
+	Shader toonShader("../shaders/crosshatch.vert", "../shaders/crosshatch.frag");
 
 	
-	GLuint textureID = 0; 
+	GLuint textureID = 0;
 	try {
-		textureID = makeTex(textureFilePath.c_str()); 
+		textureID = makeTex(textureFilePath.c_str());
 		if (textureID == 0) {
 			throw std::runtime_error("makeTex failed to load texture (check path and PNG format).");
 		}
 		std::cout << "Loaded texture: " << textureFilePath << " with ID: " << textureID << std::endl;
-	} catch (const std::exception& e) { 
+	} catch (const std::exception& e) {
 		std::cerr << "Error loading texture: " << e.what() << std::endl;
 		glfwTerminate();
 		return -1;
@@ -178,36 +180,52 @@ int main(int argc, char* argv[]) {
 		lastFrame = currentFrame;
 		
 
-		processInput(window); 
+		processInput(window);
 		
+		const float TWO_PI = 2.0f * 3.14159265f;
+		orbit_angle_x += orbit_speed;
+		orbit_angle_z += orbit_speed;
+		if (orbit_angle_x > TWO_PI) orbit_angle_x -= TWO_PI;
+		if (orbit_angle_z > TWO_PI) orbit_angle_z -= TWO_PI;
+		cameraPos = glm::vec3(orbit_radius * std::sin(orbit_angle_x), 0.5f, orbit_radius * std::cos(orbit_angle_z));
 
 		glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		toonShader.use();
 		
+		
+		
+		
+		
 		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		toonShader.setMat4("projection", projection);
-		
-		glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), cameraUp); 
-		toonShader.setMat4("view", view);
-		
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f)); 
-		model = glm::rotate(model, glm::radians(modelYaw),   glm::vec3(0.0f, 1.0f, 0.0f)); 
 
-		toonShader.setMat4("model", model);
+	  glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
+	  toonShader.setMat4("projection", projection);
+	  toonShader.setMat4("view", view);
+
+
+	  glm::mat4 model = glm::mat4(1.0f);
+	  model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f));
+	  model = glm::rotate(model, glm::radians(modelYaw), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	  model = glm::scale(model, glm::vec3(8.0f));
+
+	  model = glm::translate(model, glm::vec3(0.0f, -0.25f, 0.0f));
+	  toonShader.setMat4("model", model);
+
+	  glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
+	  toonShader.setMat3("normalMatrix", normalMatrix);
+
+
+	  toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.8f, 0.8f, 0.8f)));
+	  toonShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	  toonShader.setVec3("objectColor", glm::vec3(0.6f, 0.6f, 0.6f));
+	  toonShader.setVec3("viewPos", cameraPos);
 		
-		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
-		toonShader.setMat3("normalMatrix", normalMatrix);
-		
-		toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.0f, 1.0f, 0.3f)));
-		toonShader.setVec3("lightColor", glm::vec3(1.2f, 1.2f, 1.2f));
-		toonShader.setVec3("viewPos", cameraPos);
-		
-		glActiveTexture(GL_TEXTURE0); 
-		glBindTexture(GL_TEXTURE_2D, textureID); 
-		toonShader.setInt("textureSampler", 0); 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		toonShader.setInt("textureSampler", 0);
 		
 		
 		glBindVertexArray(VAO);
@@ -219,22 +237,6 @@ int main(int argc, char* argv[]) {
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-		
-		// --- JR's Camera System ---
-		
-		if (x_pos < 2 * 3.14159265) {
-			x_pos += 0.0005f;
-		}
-		else {
-			x_pos = 0;
-		}
-		if (z_pos < 2 * 3.14159265) {
-			z_pos += 0.0005f;
-		}
-		else {
-			z_pos = 0;
-		}
-		cameraPos = glm::vec3(50 * std::sin(x_pos), 0.5f, -50 * std::cos(z_pos));
 	}
 	
 	glDeleteVertexArrays(1, &VAO);
@@ -250,7 +252,7 @@ int main(int argc, char* argv[]) {
 bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials; 
+	std::vector<tinyobj::material_t> materials;
 	std::string warn, err;
 	
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
@@ -274,7 +276,7 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 			int fv = shape.mesh.num_face_vertices[f];
 			if (fv != 3) {
 				std::cerr << "Warning: TinyObjLoader found a non-triangle face (vertices=" << fv << "). Skipping." << std::endl;
-				index_offset += fv; 
+				index_offset += fv;
 				continue;
 			}
 			
@@ -300,14 +302,14 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 					};
 					
 					if (idx.normal_index >= 0 && 3 * idx.normal_index + 2 < attrib.normals.size()) {
-						newVertex.Normal = glm::normalize(glm::vec3{ 
+						newVertex.Normal = glm::normalize(glm::vec3{
 							attrib.normals[3 * idx.normal_index + 0],
 							attrib.normals[3 * idx.normal_index + 1],
 							attrib.normals[3 * idx.normal_index + 2]
 						});
 					} else {
 						std::cerr << "Warning: Missing or invalid normal index for vertex. Using placeholder (0,1,0)." << std::endl;
-						newVertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f); 
+						newVertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);
 					}
 					
 					if (idx.texcoord_index >= 0 && 2 * idx.texcoord_index + 1 < attrib.texcoords.size()) {
@@ -330,10 +332,10 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 	
 	if (meshData.vertices.empty() || meshData.indices.empty()) {
 		std::cerr << "Warning: Loaded OBJ file resulted in empty mesh data." << std::endl;
-		return false; 
+		return false;
 	}
 	
-	return true; 
+	return true;
 }
 
 
