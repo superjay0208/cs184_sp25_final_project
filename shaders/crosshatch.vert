@@ -14,11 +14,11 @@ out vec3 Normal;
 out vec2 TexCoord;
 
 void main() {
-		// World‐space position & normal
+
 		FragPos = vec3(model * vec4(aPos, 1.0));
 		Normal  = normalize(normalMatrix * aNormal);
 
-		// Pass through UVs (we only use the x component to lookup the hatch)
+
 		TexCoord = aTexCoord;
 
 		gl_Position = projection * view * vec4(FragPos, 1.0);

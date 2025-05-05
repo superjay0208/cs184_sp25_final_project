@@ -11,14 +11,14 @@ uniform float time;
 
 void main()
 {
-    // Modified Parameters for fewer, fatter waves
-    float frequency = 2.0;        // reduced frequency = wider sine waves
+
+    float frequency = 2.0;        
     float amplitude = 0.15;
-    float bandSpacing = 1.5;      // reduced spacing = thicker vertical bands
+    float bandSpacing = 1.5;      
     float waveSpeed = 1.0;
 
     vec3 waveColor = vec3(0.6, 0.75, 1.0);
-    vec3 bgColor = vec3(1.0); // white background
+    vec3 bgColor = vec3(1.0); 
 
     float offset = amplitude * sin(fs_in.FragPos.x * frequency + time * waveSpeed);
     float yWithOffset = fs_in.FragPos.y + offset;

@@ -36,7 +36,7 @@ void main() {
 
     highlight = clamp(highlight, 0.0, 1.0);
 
-    // Soften shadows with a complementary base tone
+
     vec3 baseColor = vec3(0.08, 0.02, 0.12);
     vec3 finalColor = mix(baseColor, vec3(1.0), highlight);
 

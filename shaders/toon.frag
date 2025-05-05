@@ -1,51 +1,37 @@
 #version 330 core
 
-in VS_OUT {
+in VS_OUT{
     vec3 FragPos;
     vec3 Normal;
 } fs_in;
 
 out vec4 FragColor;
 
-uniform vec3 lightDir;
-uniform vec3 lightColor;
-uniform vec3 objectColor;
-uniform vec3 viewPos;
+uniform float time;
 
 void main()
 {
-    vec3 norm = normalize(fs_in.Normal);
-    vec3 lightDirection = normalize(lightDir);
-    float diff = max(dot(norm, lightDirection), 0.0);
 
-    float ambientStrength = 0.2;
-    vec3 ambient = ambientStrength * lightColor;
+    float coordY = fs_in.FragPos.y;
+    float coordX = fs_in.FragPos.x;
 
-    vec3 diffuseColor;
-    if (diff > 0.85) {
-        diffuseColor = lightColor * 1.0;
-    } else if (diff > 0.5) {
-        diffuseColor = lightColor * 0.7;
-    } else if (diff > 0.15) {
-        diffuseColor = lightColor * 0.4;
-    } else {
-        diffuseColor = vec3(0.0);
-    }
+    float frequency = 6.0;
+    float speed = 1.0;
+    float thickness = 0.1;
+    float smoothness = 0.02;
 
-    vec3 result = (ambient + diffuseColor) * objectColor;
-    FragColor = vec4(result, 1.0);
+    float wave = sin(coordY * frequency + time * speed);
+    wave = 0.5 + 0.5 * wave;
 
-    /*
-    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
-    vec3 reflectDir = reflect(-lightDirection, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    float waveMask = smoothstep(thickness + smoothness, thickness, abs(wave - 0.5));
+    vec3 waveColor = vec3(0.6, 0.75, 1.0); 
 
-    float specularStrength = 0.0;
-    if(spec > 0.8) {
-       specularStrength = 1.0;
-    }
-    vec3 specular = specularStrength * lightColor;
-    result += specular;
-    FragColor = vec4(result, 1.0);
-    */
+    float redLineWidth = 0.02;
+    float redLine = smoothstep(redLineWidth + 0.005, redLineWidth, abs(coordX));
+
+    vec3 bgColor = vec3(1.0); 
+    vec3 base = mix(bgColor, waveColor, waveMask);
+    base = mix(base, vec3(1.0, 0.0, 0.0), redLine); 
+
+    FragColor = vec4(base, 1.0);
 }

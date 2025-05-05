@@ -7,24 +7,21 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <unordered_map> // Needed for vertex de-duplication
-#include <stdexcept>     // Needed for exceptions
+#include <unordered_map> 
+#include <stdexcept>    
 #include <cmath>
 
-// Define this in exactly one .cpp file before including the header
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h" // Include tinyobjloader header
+#include "tiny_obj_loader.h" 
 
-#include "shader.h"      // Include our shader helper class (KEEPING THIS)
-#include "png.h"         // << ADDED: Include PNG loading interface
-#include "hw4_helpers/shaderUtils.h" // Include shader utilities (for makeTex)
+#include "shader.h"     
+#include "png.h"      
+#include "hw4_helpers/shaderUtils.h" 
 
-// --- Globals ---
-// Window dimensions
+
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// Camera settings (Static)
 float x_pos = 0.0;
 float z_pos = 3.14159265f;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 50.0f);
@@ -32,7 +29,6 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 float fov = 45.0f;
 
-// Model Rotation settings (controlled by mouse)
 float modelYaw = 0.0f;
 float modelPitch = 0.0f;
 float lastX = SCR_WIDTH / 2.0f;
@@ -40,18 +36,15 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float sensitivity = 0.2f;
 
-// Timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// Mouse state
 bool mouseButtonPressed = false;
 
-// --- Mesh Data Structures ---
 struct Vertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;
-	glm::vec2 TexCoords; // << ADDED
+	glm::vec2 TexCoords; 
 };
 
 struct MeshData {
@@ -59,20 +52,18 @@ struct MeshData {
 	std::vector<unsigned int> indices;
 };
 
-// --- Function Prototypes ---
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-bool loadObjModel(const std::string& filepath, MeshData& meshData); // OBJ Loader
+bool loadObjModel(const std::string& filepath, MeshData& meshData); 
 
 
 int main(int argc, char* argv[]) {
 	
-	// --- Get OBJ File Path ---
-	std::string objFilePath = "teapot.obj"; // Default model path
-	std::string textureFilePath = "default_texture.png"; // << ADDED: Default texture path
+	std::string objFilePath = "teapot.obj"; 
+	std::string textureFilePath = "default_texture.png"; 
 	
 	if (argc == 2) {
 		objFilePath = argv[1];
@@ -80,7 +71,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "No texture path provided, using default: " << textureFilePath << std::endl;
 	} else if (argc >= 3) {
 		objFilePath = argv[1];
-		textureFilePath = argv[2]; // Use paths from command line
+		textureFilePath = argv[2]; 
 	} else {
 		std::cout << "Usage: " << argv[0] << " [path/to/model.obj] [path/to/texture.png]" << std::endl;
 		std::cout << "No paths provided, using defaults: " << objFilePath << " and " << textureFilePath << std::endl;
@@ -88,7 +79,6 @@ int main(int argc, char* argv[]) {
 	
 	
 	
-	// --- GLFW Initialization ---
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW" << std::endl;
 		return -1;
@@ -100,7 +90,6 @@ int main(int argc, char* argv[]) {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 	
-	// --- GLFW Window Creation ---
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Toon Shading OBJ Example", NULL, NULL);
 	if (window == NULL) {
 		std::cerr << "Failed to create GLFW window" << std::endl;
@@ -113,7 +102,6 @@ int main(int argc, char* argv[]) {
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	
-	// --- GLEW Initialization ---
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
 		std::cerr << "Failed to initialize GLEW" << std::endl;
@@ -121,33 +109,28 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 	
-	// --- OpenGL Configuration ---
 	glEnable(GL_DEPTH_TEST);
 	
-	// --- Shader Compilation ---
-	// Ensure these shaders exist and are updated for texturing (see below)
+
 	Shader toonShader("shaders/crosshatch.vert", "shaders/crosshatch.frag");
 
 	
-	GLuint textureID = 0; // Use GLuint for OpenGL handles
+	GLuint textureID = 0; 
 	try {
-		textureID = makeTex(textureFilePath.c_str()); // Calls PNGParser::load internally
+		textureID = makeTex(textureFilePath.c_str()); 
 		if (textureID == 0) {
 			throw std::runtime_error("makeTex failed to load texture (check path and PNG format).");
 		}
 		std::cout << "Loaded texture: " << textureFilePath << " with ID: " << textureID << std::endl;
-	} catch (const std::exception& e) { // Catch potential errors from makeTex or runtime_error
+	} catch (const std::exception& e) { 
 		std::cerr << "Error loading texture: " << e.what() << std::endl;
-		// Optionally, continue without texture or terminate
 		glfwTerminate();
 		return -1;
 	}
 	
-	// --- Load OBJ Mesh Data ---
 	MeshData mesh;
 	try {
 		if (!loadObjModel(objFilePath, mesh)) {
-			// Error message already printed in loadObjModel if using tinyobjloader errors
 			std::cerr << "Failed to load OBJ model: " << objFilePath << std::endl;
 			glfwTerminate();
 			return -1;
@@ -163,7 +146,6 @@ int main(int argc, char* argv[]) {
 	}
 	
 	
-	// --- Vertex Buffer Object (VBO), Vertex Array Object (VAO), Element Buffer Object (EBO) ---
 	unsigned int VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -177,87 +159,64 @@ int main(int argc, char* argv[]) {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), &mesh.indices[0], GL_STATIC_DRAW);
 	
-	// Position attribute (location = 0)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
 	glEnableVertexAttribArray(0);
-	// Normal attribute (location = 1)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 	glEnableVertexAttribArray(1);
-	// Texture coordinate attribute (location = 2) // << ADDED
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 	glEnableVertexAttribArray(2);
 	
-	// Unbind VAO first, then other buffers
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	
 	
-	// --- Render Loop ---
 	while (!glfwWindowShouldClose(window)) {
-		// --- Per-frame time logic ---
+
 		float currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		
-		// --- Input ---
-		processInput(window); // Process keyboard input (like ESC)
+
+		processInput(window); 
 		
-		// --- Camera Update (Based on Mouse Scroll - FOV Zoom) ---
-		// Rotation is handled in mouse_callback
-		// Translation could be added in processInput if desired
-		
-		// --- Rendering ---
+
 		glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		// Activate the toon shader
 		toonShader.use();
 		
-		// Set up projection matrix (FOV can change via scroll)
 		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		toonShader.setMat4("projection", projection);
 		
-		// Set up view matrix (Static camera position, looking at origin)
-		glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), cameraUp); // Look at origin
+		glm::mat4 view = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), cameraUp); 
 		toonShader.setMat4("view", view);
 		
-		// Set up model matrix based on mouse rotation
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f)); // Apply pitch first
-		model = glm::rotate(model, glm::radians(modelYaw),   glm::vec3(0.0f, 1.0f, 0.0f)); // Then apply yaw
-		// Optional: Adjust scale if needed (e.g., teapot model often needs scaling)
-		// model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f)); // Example scale
+		model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f)); 
+		model = glm::rotate(model, glm::radians(modelYaw),   glm::vec3(0.0f, 1.0f, 0.0f)); 
+
 		toonShader.setMat4("model", model);
 		
-		// Calculate and set the normal matrix (for non-uniform scaling)
 		glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 		toonShader.setMat3("normalMatrix", normalMatrix);
 		
-		// Set lighting and view position uniforms
-		// Make light direction relative to view space or world space as needed
 		toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.0f, 1.0f, 0.3f)));
 		toonShader.setVec3("lightColor", glm::vec3(1.2f, 1.2f, 1.2f));
 		toonShader.setVec3("viewPos", cameraPos);
-		// toonShader.setVec3("objectColor", ...); // << REMOVED - Color comes from texture
 		
-		// Bind Texture and Set Sampler Uniform // << ADDED
-		glActiveTexture(GL_TEXTURE0); // Activate texture unit 0
-		glBindTexture(GL_TEXTURE_2D, textureID); // Bind our loaded texture
-		toonShader.setInt("textureSampler", 0); // Tell shader sampler to use texture unit 0
+		glActiveTexture(GL_TEXTURE0); 
+		glBindTexture(GL_TEXTURE_2D, textureID); 
+		toonShader.setInt("textureSampler", 0); 
 		
 		
-		// Bind the VAO for the mesh
 		glBindVertexArray(VAO);
-		// Draw the mesh using indices from the EBO
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
 		
-		// Unbind VAO and Texture (good practice)
 		glBindVertexArray(0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		
 		
-		// --- Swap Buffers and Poll Events ---
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 		
@@ -278,7 +237,6 @@ int main(int argc, char* argv[]) {
 		cameraPos = glm::vec3(50 * std::sin(x_pos), 0.5f, -50 * std::cos(z_pos));
 	}
 	
-	// --- Cleanup ---
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
@@ -288,24 +246,20 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-// --- OBJ Loader using tinyobjloader ---
-// Updated to handle texture coordinates
+
 bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials; // Not used in this example
+	std::vector<tinyobj::material_t> materials; 
 	std::string warn, err;
 	
-	// Load the OBJ file
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
-		// Error occurred during loading
 		if (!err.empty()) {
 			std::cerr << "TinyObjLoader Error: " << err << std::endl;
 		}
 		return false;
 	}
 	
-	// Optional: Print warnings
 	if (!warn.empty()) {
 		std::cout << "TinyObjLoader Warning: " << warn << std::endl;
 	}
@@ -314,30 +268,25 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 	meshData.indices.clear();
 	std::unordered_map<std::string, unsigned int> uniqueVertices{};
 	
-	// Iterate over shapes
 	for (const auto& shape : shapes) {
-		// Iterate over faces (triangles)
 		size_t index_offset = 0;
 		for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f) {
 			int fv = shape.mesh.num_face_vertices[f];
 			if (fv != 3) {
 				std::cerr << "Warning: TinyObjLoader found a non-triangle face (vertices=" << fv << "). Skipping." << std::endl;
-				index_offset += fv; // Skip this face's vertices
+				index_offset += fv; 
 				continue;
 			}
 			
 			
-			// Iterate over vertices in the face
 			for (size_t v = 0; v < fv; ++v) {
 				tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 				
-				// Create a unique key: "vertex_idx/normal_idx/texcoord_idx"
 				std::string vertexKey = std::to_string(idx.vertex_index) + "/";
 				if (idx.normal_index >= 0) vertexKey += std::to_string(idx.normal_index); else vertexKey += "-1";
 				if (idx.texcoord_index >= 0) vertexKey += "/" + std::to_string(idx.texcoord_index); else vertexKey += "/-1"; // Add if using texcoords
 				if (idx.texcoord_index >= 0) vertexKey += "/" + std::to_string(idx.texcoord_index); else vertexKey += "/-1"; // Add if using texcoords
 				
-				// Check if this unique vertex combination already exists
 				if (uniqueVertices.count(vertexKey) == 0) {
 					Vertex newVertex;
 					
@@ -350,19 +299,17 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 						attrib.vertices[3 * idx.vertex_index + 2]
 					};
 					
-					// Normal
 					if (idx.normal_index >= 0 && 3 * idx.normal_index + 2 < attrib.normals.size()) {
-						newVertex.Normal = glm::normalize(glm::vec3{ // Ensure normals are normalized
+						newVertex.Normal = glm::normalize(glm::vec3{ 
 							attrib.normals[3 * idx.normal_index + 0],
 							attrib.normals[3 * idx.normal_index + 1],
 							attrib.normals[3 * idx.normal_index + 2]
 						});
 					} else {
 						std::cerr << "Warning: Missing or invalid normal index for vertex. Using placeholder (0,1,0)." << std::endl;
-						newVertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f); // Placeholder normal
+						newVertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f); 
 					}
 					
-					// Texture coordinates
 					if (idx.texcoord_index >= 0 && 2 * idx.texcoord_index + 1 < attrib.texcoords.size()) {
 						newVertex.TexCoords = {
 							attrib.texcoords[2 * idx.texcoord_index + 0],
@@ -372,11 +319,9 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 						newVertex.TexCoords = glm::vec2(0.0f, 0.0f);
 					}
 					
-					// Add the unique vertex to our list and map
 					meshData.vertices.push_back(newVertex);
 					uniqueVertices[vertexKey] = static_cast<unsigned int>(meshData.vertices.size() - 1);
 				}
-				// Add the index of the unique vertex to our final index list
 				meshData.indices.push_back(uniqueVertices[vertexKey]);
 			}
 			index_offset += fv;
@@ -385,14 +330,13 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 	
 	if (meshData.vertices.empty() || meshData.indices.empty()) {
 		std::cerr << "Warning: Loaded OBJ file resulted in empty mesh data." << std::endl;
-		return false; // Or handle appropriately
+		return false; 
 	}
 	
-	return true; // Success
+	return true; 
 }
 
 
-// --- GLFW Callback Functions ---
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);

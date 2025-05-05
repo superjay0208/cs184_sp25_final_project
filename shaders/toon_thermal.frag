@@ -24,17 +24,17 @@ void main()
     vec3 diffuseColor;
 
     if (diff > 0.9) {
-        diffuseColor = vec3(1.0, 1.0, 1.0); // White-hot
+        diffuseColor = vec3(1.0, 1.0, 1.0); 
     } else if (diff > 0.75) {
-        diffuseColor = vec3(1.0, 0.6, 0.2); // Yellow-orange
+        diffuseColor = vec3(1.0, 0.6, 0.2); 
     } else if (diff > 0.5) {
-        diffuseColor = vec3(1.0, 0.0, 0.0); // Red
+        diffuseColor = vec3(1.0, 0.0, 0.0); 
     } else if (diff > 0.3) {
-        diffuseColor = vec3(0.4, 0.0, 0.4); // Purple
+        diffuseColor = vec3(0.4, 0.0, 0.4); 
     } else if (diff > 0.1) {
-        diffuseColor = vec3(0.0, 0.0, 0.8); // Blue
+        diffuseColor = vec3(0.0, 0.0, 0.8); 
     } else {
-        diffuseColor = vec3(0.0, 0.0, 0.0); // Cold: Black
+        diffuseColor = vec3(0.0, 0.0, 0.0); 
     }
 
     vec3 result = (ambient + diffuseColor) * objectColor;

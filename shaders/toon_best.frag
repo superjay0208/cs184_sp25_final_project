@@ -23,21 +23,20 @@ void main()
 
     vec3 diffuseColor;
     if (diff > 0.85) {
-        diffuseColor = vec3(0.8, 0.6, 0.2); // Warm highlight (golden)
+        diffuseColor = vec3(0.8, 0.6, 0.2); 
     } else if (diff > 0.5) {
-        diffuseColor = vec3(0.2, 0.6, 0.8); // Cool mid-tone (sky blue)
+        diffuseColor = vec3(0.2, 0.6, 0.8); 
     } else if (diff > 0.15) {
-        diffuseColor = vec3(0.2, 0.3, 0.6); // Deep blue
+        diffuseColor = vec3(0.2, 0.3, 0.6); 
     } else {
-        diffuseColor = vec3(0.05, 0.05, 0.1); // Near black / dark blue
+        diffuseColor = vec3(0.05, 0.05, 0.1); 
     }
 
     vec3 baseColor = (ambient + diffuseColor) * objectColor;
 
-    // Reverse glow: More visible in shadow
-    float glowStrength = (1.0 - diff); // Higher when surface is darker
-    vec3 glowColor = vec3(0.5, 0.3, 1.0); // soft purple (blue-compatible and balances yellow)
-    vec3 glow = glowStrength * glowColor * 0.5; // You can tweak the 0.5 factor
+    float glowStrength = (1.0 - diff); 
+    vec3 glowColor = vec3(0.5, 0.3, 1.0); 
+    vec3 glow = glowStrength * glowColor * 0.5; 
 
     vec3 finalColor = baseColor + glow;
 

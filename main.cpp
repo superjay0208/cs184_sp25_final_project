@@ -7,33 +7,31 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <unordered_map> // Needed for vertex de-duplication
-#include <stdexcept>     // Needed for exceptions
+#include <unordered_map> 
+#include <stdexcept>   
 #include <cmath>
 
-// Define this in exactly one .cpp file before including the header
+
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h" // Include tinyobjloader header
+#include "tiny_obj_loader.h" 
 
-#include "shader.h" // Include our shader helper class
+#include "shader.h" 
 
-// --- Globals ---
-// Window dimensions
+
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// Camera settings
-float orbit_radius = 40.0f; // *** CHANGED: Reduced orbit radius ***
-float orbit_speed = 0.005f; // *** ADDED: Control orbit speed ***
-float orbit_angle_x = 0.0f; // *** RENAMED/CHANGED: For orbit calculation ***
-float orbit_angle_z = 0.0f; // *** RENAMED/CHANGED: For orbit calculation ***
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, orbit_radius); // *** CHANGED: Initial position closer ***
-// glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // *** REMOVED: No longer needed for lookAt ***
+
+float orbit_radius = 40.0f;
+float orbit_speed = 0.005f;
+float orbit_angle_x = 0.0f;
+float orbit_angle_z = 0.0f;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, orbit_radius); 
+// glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // *** ADDED: Point camera looks at (object center) ***
+glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); 
 float fov = 45.0f;
 
-// Model Rotation settings (controlled by mouse)
 float modelYaw = 0.0f;
 float modelPitch = 0.0f;
 float lastX = SCR_WIDTH / 2.0f;
@@ -41,18 +39,14 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float sensitivity = 0.2f;
 
-// Timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// Mouse state
 bool mouseButtonPressed = false;
 
-// --- Mesh Data Structures ---
 struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
-    // Add glm::vec2 TexCoords; if needed
 };
 
 struct MeshData {
@@ -60,21 +54,19 @@ struct MeshData {
     std::vector<unsigned int> indices;
 };
 
-// --- Function Prototypes ---
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-bool loadObjModel(const std::string& filepath, MeshData& meshData); // OBJ Loader
+bool loadObjModel(const std::string& filepath, MeshData& meshData); 
 
 
 int main(int argc, char* argv[]) {
 
-    // --- Get OBJ File Path ---
-    std::string objFilePath = "tralalero-tralala.obj"; // Default path
+    std::string objFilePath = "tralalero-tralala.obj"; 
     if (argc > 1) {
-        objFilePath = argv[1]; // Use path from command line if provided
+        objFilePath = argv[1]; 
     }
     else {
         std::cout << "Usage: " << argv[0] << " [path/to/model.obj]" << std::endl;
@@ -82,7 +74,6 @@ int main(int argc, char* argv[]) {
     }
 
 
-    // --- GLFW Initialization ---
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
@@ -94,7 +85,6 @@ int main(int argc, char* argv[]) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    // --- GLFW Window Creation ---
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Toon Shading OBJ Example", NULL, NULL);
     if (window == NULL) {
         std::cerr << "Failed to create GLFW window" << std::endl;
@@ -107,7 +97,6 @@ int main(int argc, char* argv[]) {
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-    // --- GLEW Initialization ---
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW" << std::endl;
@@ -115,13 +104,10 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // --- OpenGL Configuration ---
     glEnable(GL_DEPTH_TEST);
 
-    // --- Shader Compilation ---
     Shader toonShader("shaders/toon.vert", "shaders/toon.frag");
 
-    // --- Load OBJ Mesh Data ---
     MeshData mesh;
     try {
         if (!loadObjModel(objFilePath, mesh)) {
@@ -140,7 +126,6 @@ int main(int argc, char* argv[]) {
     }
 
 
-    // --- Vertex Buffer Object (VBO), Vertex Array Object (VAO), Element Buffer Object (EBO) ---
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -154,10 +139,9 @@ int main(int argc, char* argv[]) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), &mesh.indices[0], GL_STATIC_DRAW);
 
-    // Position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
     glEnableVertexAttribArray(0);
-    // Normal attribute
+
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
     glEnableVertexAttribArray(1);
 
@@ -166,74 +150,66 @@ int main(int argc, char* argv[]) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 
-    // --- Render Loop ---
+
     while (!glfwWindowShouldClose(window)) {
-        // --- Per-frame time logic ---
+
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // --- Input ---
+
         processInput(window);
 
-        // --- Update Camera Position for Orbit ---
-        // This calculation happens *before* setting up the view matrix
+
         const float TWO_PI = 2.0f * 3.14159265f;
-        orbit_angle_x += orbit_speed; // Use deltaTime for frame-rate independence: orbit_speed * deltaTime;
-        orbit_angle_z += orbit_speed; // Use deltaTime for frame-rate independence: orbit_speed * deltaTime;
+        orbit_angle_x += orbit_speed; 
+        orbit_angle_z += orbit_speed; 
 
         if (orbit_angle_x > TWO_PI) orbit_angle_x -= TWO_PI;
         if (orbit_angle_z > TWO_PI) orbit_angle_z -= TWO_PI;
 
-        // *** CHANGED: Use orbit_radius and new angle variables ***
-        // Keep Y position slightly elevated, adjust as needed
+
         cameraPos = glm::vec3(orbit_radius * std::sin(orbit_angle_x), 0.5f, orbit_radius * std::cos(orbit_angle_z));
 
 
-        // --- Rendering ---
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Activate the toon shader
+
         toonShader.use();
 
-        // Set up view and projection matrices
+
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // *** CHANGED: Use cameraTarget (the origin) as the point to look at ***
+
         glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
         toonShader.setMat4("projection", projection);
         toonShader.setMat4("view", view);
 
-        // Set up model matrix based on mouse rotation
+
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(modelYaw), glm::vec3(0.0f, 1.0f, 0.0f));
-        // Optional: Scale model if it's too big/small
-        model = glm::scale(model, glm::vec3(50.5f, 50.5f, 50.5f)); // Keep scale or adjust as needed
+
+        model = glm::scale(model, glm::vec3(50.5f, 50.5f, 50.5f)); 
 
         model = glm::translate(model, glm::vec3(0.0f, -0.25f, 0.0f));
         toonShader.setMat4("model", model);
 
-        // Calculate and set the normal matrix
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
         toonShader.setMat3("normalMatrix", normalMatrix);
 
-        // Set lighting and object uniforms
-        // Make light direction dynamic or keep it static? Static for now.
-        toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.8f, 0.8f, 0.8f)));
-        toonShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f)); // Adjusted light color slightly
-        toonShader.setVec3("objectColor", glm::vec3(0.6f, 0.6f, 0.6f)); // Grey object color
-        toonShader.setVec3("viewPos", cameraPos); // Pass updated camera position
 
-        // Bind the VAO for the mesh
+        toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.8f, 0.8f, 0.8f)));
+        toonShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f)); 
+        toonShader.setVec3("objectColor", glm::vec3(0.6f, 0.6f, 0.6f)); 
+        toonShader.setVec3("viewPos", cameraPos); 
+
+
         glBindVertexArray(VAO);
-        // Draw the mesh using indices from the EBO
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
-        // Unbind VAO
         glBindVertexArray(0);
 
 
-        // --- Swap Buffers and Poll Events ---
         glfwSwapBuffers(window);
         glfwPollEvents();
 
@@ -256,7 +232,6 @@ int main(int argc, char* argv[]) {
         */
     }
 
-    // --- Cleanup ---
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
@@ -265,24 +240,20 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// --- OBJ Loader using tinyobjloader ---
-// (No changes needed in loadObjModel function itself for this request)
+
 bool loadObjModel(const std::string& filepath, MeshData& meshData) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials; // Not used in this example
+    std::vector<tinyobj::material_t> materials; 
     std::string warn, err;
 
-    // Load the OBJ file
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
-        // Error occurred during loading
         if (!err.empty()) {
             std::cerr << "TinyObjLoader Error: " << err << std::endl;
         }
         return false;
     }
 
-    // Optional: Print warnings
     if (!warn.empty()) {
         std::cout << "TinyObjLoader Warning: " << warn << std::endl;
     }
@@ -291,34 +262,26 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
     meshData.indices.clear();
     std::unordered_map<std::string, unsigned int> uniqueVertices{};
 
-    // Iterate over shapes
     for (const auto& shape : shapes) {
-        // Iterate over faces (triangles)
         size_t index_offset = 0;
         for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f) {
             int fv = shape.mesh.num_face_vertices[f];
             if (fv != 3) {
                 std::cerr << "Warning: TinyObjLoader found a non-triangle face (vertices=" << fv << "). Skipping." << std::endl;
-                index_offset += fv; // Skip this face's vertices
+                index_offset += fv;
                 continue;
             }
 
 
-            // Iterate over vertices in the face
             for (size_t v = 0; v < fv; ++v) {
                 tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
-                // Create a unique key: "vertex_idx/normal_idx/texcoord_idx"
                 std::string vertexKey = std::to_string(idx.vertex_index) + "/";
                 if (idx.normal_index >= 0) vertexKey += std::to_string(idx.normal_index); else vertexKey += "-1";
-                // if (idx.texcoord_index >= 0) vertexKey += "/" + std::to_string(idx.texcoord_index); else vertexKey += "/-1"; // Add if using texcoords
 
-                // Check if this unique vertex combination already exists
                 if (uniqueVertices.count(vertexKey) == 0) {
-                    // Create a new Vertex
                     Vertex newVertex;
 
-                    // Position (must exist)
                     if (idx.vertex_index < 0 || 3 * size_t(idx.vertex_index) + 2 >= attrib.vertices.size()) {
                         throw std::runtime_error("Invalid vertex index in OBJ file.");
                     }
@@ -328,7 +291,6 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
                         attrib.vertices[3 * size_t(idx.vertex_index) + 2]
                     };
 
-                    // Normal (check existence)
                     if (idx.normal_index >= 0 && 3 * size_t(idx.normal_index) + 2 < attrib.normals.size()) {
                         newVertex.Normal = {
                             attrib.normals[3 * size_t(idx.normal_index) + 0],
@@ -337,12 +299,11 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
                         };
                     }
                     else {
-                        // Handle missing normals - generate placeholder or throw error
                         std::cerr << "Warning: Missing or invalid normal index for vertex. Using placeholder (0,1,0)." << std::endl;
                         newVertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f);
                     }
 
-                    // Texture Coordinates (check existence if needed)
+                    // Texture Coordinates
                     // if (idx.texcoord_index >= 0 && 2 * idx.texcoord_index + 1 < attrib.texcoords.size()) {
                     //     newVertex.TexCoords = {
                     //         attrib.texcoords[2 * idx.texcoord_index + 0],
@@ -352,11 +313,9 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
                     //     newVertex.TexCoords = glm::vec2(0.0f, 0.0f);
                     // }
 
-                    // Add the unique vertex to our list and map
                     meshData.vertices.push_back(newVertex);
                     uniqueVertices[vertexKey] = static_cast<unsigned int>(meshData.vertices.size() - 1);
                 }
-                // Add the index of the unique vertex to our final index list
                 meshData.indices.push_back(uniqueVertices[vertexKey]);
             }
             index_offset += fv;
@@ -365,16 +324,14 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 
     if (meshData.vertices.empty() || meshData.indices.empty()) {
         std::cerr << "Warning: Loaded OBJ file resulted in empty mesh data." << std::endl;
-        // Depending on requirements, you might want to return false here
-        // return false;
+
     }
 
-    return true; // Success
+    return true; 
 }
 
 
-// --- GLFW Callback Functions ---
-// (No changes needed in callbacks for this request)
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -384,15 +341,14 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    // Add other key processing here if needed (e.g., camera speed adjustment)
+
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
             mouseButtonPressed = true;
-            // Reset firstMouse flag when button is pressed AFTER releasing it
-            // This prevents a jump if you click, release, then click again
+
             firstMouse = true;
         }
         else if (action == GLFW_RELEASE) {
@@ -403,13 +359,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-    // This function controls the OBJECT'S rotation based on mouse drag
+
     if (!mouseButtonPressed) {
-        // If mouse isn't pressed, update last positions but don't process movement
-        // This prevents the view from snapping when the button is pressed again
+
         lastX = static_cast<float>(xposIn);
         lastY = static_cast<float>(yposIn);
-        firstMouse = true; // Ensure the next press starts fresh
+        firstMouse = true; 
         return;
     }
 
@@ -423,7 +378,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    float yoffset = lastY - ypos; 
     lastX = xpos;
     lastY = ypos;
 
@@ -433,17 +388,14 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     modelYaw += xoffset;
     modelPitch += yoffset;
 
-    // Clamp pitch to avoid flipping
     if (modelPitch > 89.0f) modelPitch = 89.0f;
     if (modelPitch < -89.0f) modelPitch = -89.0f;
 
-    // Optional: Wrap Yaw
-    // modelYaw = fmod(modelYaw, 360.0f);
+
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    // This controls Field of View (Zoom)
     fov -= (float)yoffset;
     if (fov < 1.0f) fov = 1.0f;
-    if (fov > 60.0f) fov = 60.0f; // Adjust max FOV if needed
+    if (fov > 60.0f) fov = 60.0f; 
 }

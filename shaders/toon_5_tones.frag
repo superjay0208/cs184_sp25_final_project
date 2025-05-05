@@ -23,26 +23,26 @@ void main()
 
     // 5-color cyclic palette
     vec3 palette[5];
-    palette[0] = vec3(0.6, 0.4, 1.0); // Purple
-    palette[1] = vec3(0.4, 0.6, 1.0); // Blue
-    palette[2] = vec3(0.4, 1.0, 1.0); // Cyan
-    palette[3] = vec3(0.5, 1.0, 0.6); // Green
-    palette[4] = vec3(1.0, 0.9, 0.5); // Yellow
+    palette[0] = vec3(0.6, 0.4, 1.0); 
+    palette[1] = vec3(0.4, 0.6, 1.0); 
+    palette[2] = vec3(0.4, 1.0, 1.0); 
+    palette[3] = vec3(0.5, 1.0, 0.6); 
+    palette[4] = vec3(1.0, 0.9, 0.5); 
 
     vec3 toneColor;
 
     if (diff < 0.7) {
     int band;
     if (diff < 0.1) {
-        band = int(floor(diff / (0.1 / 5.0)));  // First cycle: 0.00–0.10
+        band = int(floor(diff / (0.1 / 5.0)));  
     } else if (diff < 0.3) {
-        band = 5 + int(floor((diff - 0.1) / (0.2 / 5.0)));  // Second cycle: 0.10–0.30
+        band = 5 + int(floor((diff - 0.1) / (0.2 / 5.0)));  
     } else {
-        band = 10 + int(floor((diff - 0.3) / (0.4 / 5.0))); // Third cycle: 0.30–0.70
+        band = 10 + int(floor((diff - 0.3) / (0.4 / 5.0))); 
     }
     toneColor = palette[band % 5];
 } else {
-    int band = int(floor((diff - 0.7) / ((1.0 - 0.7) / 5.0)));  // Last cycle: 0.70–1.00
+    int band = int(floor((diff - 0.7) / ((1.0 - 0.7) / 5.0)));  
     toneColor = palette[band % 5];
 }
 

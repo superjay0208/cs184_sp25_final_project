@@ -22,24 +22,23 @@ void main()
 {
     vec3 N = normalize(fs_in.Normal);
     vec3 L = normalize(lightDir);
-    float diff = max(dot(N, L), 0.0); // how strongly lit the surface is
+    float diff = max(dot(N, L), 0.0); 
 
-    // Control triangle density with light intensity
-    float density = mix(20.0, 100.0, diff); // More triangles in brighter areas
+    float density = mix(20.0, 100.0, diff); 
 
     vec2 uv = fs_in.FragPos.xy * density;
 
     vec2 grid = floor(uv);
     vec2 local = fract(uv);
 
-    // Flip alternate rows for staggered triangles
+
     if (mod(grid.y, 2.0) > 0.5) {
         local.x = 1.0 - local.x;
     }
 
     float t = triangle(local);
 
-    // Interpolate green to white based on brightness
+
     vec3 baseColor = mix(vec3(0.2, 0.9, 0.6), vec3(1.0), diff);
 
     FragColor = vec4(baseColor * t, 1.0);
