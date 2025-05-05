@@ -22,12 +22,15 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// Camera settings (Static)
-float x_pos = 0.0;
-float z_pos = 0.0;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 50.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+// Camera settings
+float orbit_radius = 40.0f; // *** CHANGED: Reduced orbit radius ***
+float orbit_speed = 0.005f; // *** ADDED: Control orbit speed ***
+float orbit_angle_x = 0.0f; // *** RENAMED/CHANGED: For orbit calculation ***
+float orbit_angle_z = 0.0f; // *** RENAMED/CHANGED: For orbit calculation ***
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, orbit_radius); // *** CHANGED: Initial position closer ***
+// glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // *** REMOVED: No longer needed for lookAt ***
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // *** ADDED: Point camera looks at (object center) ***
 float fov = 45.0f;
 
 // Model Rotation settings (controlled by mouse)
@@ -69,7 +72,7 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData); // OBJ Loade
 int main(int argc, char* argv[]) {
 
     // --- Get OBJ File Path ---
-    std::string objFilePath = "teapot.obj"; // Default path
+    std::string objFilePath = "tralalero-tralala.obj"; // Default path
     if (argc > 1) {
         objFilePath = argv[1]; // Use path from command line if provided
     }
@@ -173,6 +176,20 @@ int main(int argc, char* argv[]) {
         // --- Input ---
         processInput(window);
 
+        // --- Update Camera Position for Orbit ---
+        // This calculation happens *before* setting up the view matrix
+        const float TWO_PI = 2.0f * 3.14159265f;
+        orbit_angle_x += orbit_speed; // Use deltaTime for frame-rate independence: orbit_speed * deltaTime;
+        orbit_angle_z += orbit_speed; // Use deltaTime for frame-rate independence: orbit_speed * deltaTime;
+
+        if (orbit_angle_x > TWO_PI) orbit_angle_x -= TWO_PI;
+        if (orbit_angle_z > TWO_PI) orbit_angle_z -= TWO_PI;
+
+        // *** CHANGED: Use orbit_radius and new angle variables ***
+        // Keep Y position slightly elevated, adjust as needed
+        cameraPos = glm::vec3(orbit_radius * std::sin(orbit_angle_x), 0.5f, orbit_radius * std::cos(orbit_angle_z));
+
+
         // --- Rendering ---
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -182,7 +199,8 @@ int main(int argc, char* argv[]) {
 
         // Set up view and projection matrices
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = glm::lookAt(cameraPos, cameraFront, cameraUp);
+        // *** CHANGED: Use cameraTarget (the origin) as the point to look at ***
+        glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, cameraUp);
         toonShader.setMat4("projection", projection);
         toonShader.setMat4("view", view);
 
@@ -191,7 +209,9 @@ int main(int argc, char* argv[]) {
         model = glm::rotate(model, glm::radians(modelPitch), glm::vec3(1.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(modelYaw), glm::vec3(0.0f, 1.0f, 0.0f));
         // Optional: Scale model if it's too big/small
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::scale(model, glm::vec3(50.5f, 50.5f, 50.5f)); // Keep scale or adjust as needed
+
+        model = glm::translate(model, glm::vec3(0.0f, -0.25f, 0.0f));
         toonShader.setMat4("model", model);
 
         // Calculate and set the normal matrix
@@ -199,10 +219,11 @@ int main(int argc, char* argv[]) {
         toonShader.setMat3("normalMatrix", normalMatrix);
 
         // Set lighting and object uniforms
+        // Make light direction dynamic or keep it static? Static for now.
         toonShader.setVec3("lightDir", glm::normalize(glm::vec3(0.8f, 0.8f, 0.8f)));
-        toonShader.setVec3("lightColor", glm::vec3(2.0f, 2.0f, 2.0f));
+        toonShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f)); // Adjusted light color slightly
         toonShader.setVec3("objectColor", glm::vec3(0.6f, 0.6f, 0.6f)); // Grey object color
-        toonShader.setVec3("viewPos", cameraPos);
+        toonShader.setVec3("viewPos", cameraPos); // Pass updated camera position
 
         // Bind the VAO for the mesh
         glBindVertexArray(VAO);
@@ -216,21 +237,23 @@ int main(int argc, char* argv[]) {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        // --- JR's Camera System ---
-        
+        // --- JR's Camera System --- (Now integrated above before rendering)
+        /*
+        // --- OLD CODE ---
         if (x_pos < 2 * 3.14159265) {
-            x_pos += 0.0005f;
+             x_pos += 0.0005f;
         }
         else {
-            x_pos = 0;
+             x_pos = 0;
         }
         if (z_pos < 2 * 3.14159265) {
-            z_pos += 0.0005f;
+             z_pos += 0.0005f;
         }
         else {
-            z_pos = 0;
+             z_pos = 0;
         }
         cameraPos = glm::vec3(20 * std::sin(x_pos), 0.5f, -20 * std::cos(z_pos));
+        */
     }
 
     // --- Cleanup ---
@@ -243,6 +266,7 @@ int main(int argc, char* argv[]) {
 }
 
 // --- OBJ Loader using tinyobjloader ---
+// (No changes needed in loadObjModel function itself for this request)
 bool loadObjModel(const std::string& filepath, MeshData& meshData) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -295,21 +319,21 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
                     Vertex newVertex;
 
                     // Position (must exist)
-                    if (idx.vertex_index < 0 || 3 * idx.vertex_index + 2 >= attrib.vertices.size()) {
+                    if (idx.vertex_index < 0 || 3 * size_t(idx.vertex_index) + 2 >= attrib.vertices.size()) {
                         throw std::runtime_error("Invalid vertex index in OBJ file.");
                     }
                     newVertex.Position = {
-                        attrib.vertices[3 * idx.vertex_index + 0],
-                        attrib.vertices[3 * idx.vertex_index + 1],
-                        attrib.vertices[3 * idx.vertex_index + 2]
+                        attrib.vertices[3 * size_t(idx.vertex_index) + 0],
+                        attrib.vertices[3 * size_t(idx.vertex_index) + 1],
+                        attrib.vertices[3 * size_t(idx.vertex_index) + 2]
                     };
 
                     // Normal (check existence)
-                    if (idx.normal_index >= 0 && 3 * idx.normal_index + 2 < attrib.normals.size()) {
+                    if (idx.normal_index >= 0 && 3 * size_t(idx.normal_index) + 2 < attrib.normals.size()) {
                         newVertex.Normal = {
-                            attrib.normals[3 * idx.normal_index + 0],
-                            attrib.normals[3 * idx.normal_index + 1],
-                            attrib.normals[3 * idx.normal_index + 2]
+                            attrib.normals[3 * size_t(idx.normal_index) + 0],
+                            attrib.normals[3 * size_t(idx.normal_index) + 1],
+                            attrib.normals[3 * size_t(idx.normal_index) + 2]
                         };
                     }
                     else {
@@ -341,7 +365,8 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 
     if (meshData.vertices.empty() || meshData.indices.empty()) {
         std::cerr << "Warning: Loaded OBJ file resulted in empty mesh data." << std::endl;
-        return false; // Or handle appropriately
+        // Depending on requirements, you might want to return false here
+        // return false;
     }
 
     return true; // Success
@@ -349,6 +374,7 @@ bool loadObjModel(const std::string& filepath, MeshData& meshData) {
 
 
 // --- GLFW Callback Functions ---
+// (No changes needed in callbacks for this request)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -357,12 +383,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    // Add other key processing here if needed (e.g., camera speed adjustment)
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
             mouseButtonPressed = true;
+            // Reset firstMouse flag when button is pressed AFTER releasing it
+            // This prevents a jump if you click, release, then click again
             firstMouse = true;
         }
         else if (action == GLFW_RELEASE) {
@@ -371,11 +401,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
+
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+    // This function controls the OBJECT'S rotation based on mouse drag
     if (!mouseButtonPressed) {
+        // If mouse isn't pressed, update last positions but don't process movement
+        // This prevents the view from snapping when the button is pressed again
         lastX = static_cast<float>(xposIn);
         lastY = static_cast<float>(yposIn);
-        firstMouse = true;
+        firstMouse = true; // Ensure the next press starts fresh
         return;
     }
 
@@ -389,7 +423,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
     lastX = xpos;
     lastY = ypos;
 
@@ -399,12 +433,17 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     modelYaw += xoffset;
     modelPitch += yoffset;
 
+    // Clamp pitch to avoid flipping
     if (modelPitch > 89.0f) modelPitch = 89.0f;
     if (modelPitch < -89.0f) modelPitch = -89.0f;
+
+    // Optional: Wrap Yaw
+    // modelYaw = fmod(modelYaw, 360.0f);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    // This controls Field of View (Zoom)
     fov -= (float)yoffset;
     if (fov < 1.0f) fov = 1.0f;
-    if (fov > 60.0f) fov = 60.0f;
+    if (fov > 60.0f) fov = 60.0f; // Adjust max FOV if needed
 }
